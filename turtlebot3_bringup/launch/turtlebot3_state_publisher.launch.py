@@ -18,10 +18,9 @@
 
 import os
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import  Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, FindPackageShare
 from launch_ros.actions import Node
 
 
@@ -29,20 +28,24 @@ def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    urdf_file_name = 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf'
+    prefix = LaunchConfiguration("prefix", default_value='""')
+    urdf_file_name = 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf.xacro'
 
     print("urdf_file_name : {}".format(urdf_file_name))
 
-    urdf = os.path.join(
-        get_package_share_directory('turtlebot3_description'),
-        'urdf',
-        urdf_file_name)
-
-    # Major refactor of the robot_state_publisher
-    # Reference page: https://github.com/ros2/demos/pull/426
-    with open(urdf, 'r') as infp:
-        robot_desc = infp.read()
-
+# Get URDF via xacro
+    robot_desc = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [FindPackageShare("turtlebot3_description"), "urdf", urdf_file_name]
+            ),
+            " ",
+            "prefix:=",
+            prefix,
+        ]
+    )
     rsp_params = {'robot_description': robot_desc}
 
     # print (robot_desc) # Printing urdf information.
