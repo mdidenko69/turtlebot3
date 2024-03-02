@@ -26,7 +26,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import ThisLaunchFileDir
 from launch_ros.actions import Node
-
+from launch.conditions import IfCondition
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
@@ -34,6 +34,14 @@ def generate_launch_description():
     LDS_LAUNCH_FILE = '/hlds_laser.launch.py'
 
     usb_port = LaunchConfiguration('usb_port', default='/dev/ttyACM0')
+
+    camera_params = LaunchConfiguration(
+        'camera_params',
+        default=os.path.join(
+            get_package_share_directory('turtlebot3_bringup'),
+            'param',
+            'v4l2_camera.yaml'))
+    print("camera_params: {}".format(camera_params))
 
     tb3_param_dir = LaunchConfiguration(
         'tb3_param_dir',
@@ -57,12 +65,18 @@ def generate_launch_description():
             default=os.path.join(get_package_share_directory('hls_lfcd_lds_driver'), 'launch'))
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-
+    use_camera = LaunchConfiguration('use_camera', default='true')
+   
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time',
             default_value=use_sim_time,
             description='Use simulation (Gazebo) clock if true'),
+
+        DeclareLaunchArgument(
+            'use_camera',
+            default_value=use_camera,
+            description='Use camera if true'),
 
         DeclareLaunchArgument(
             'usb_port',
@@ -84,6 +98,13 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([lidar_pkg_dir, LDS_LAUNCH_FILE]),
             launch_arguments={'port': '/dev/ttyUSB0', 'frame_id': 'base_scan'}.items(),
         ),
+
+        Node(
+            condition=IfCondition(use_camera),
+            package='v4l2_camera',
+            executable='v4l2_camera_node',
+            parameters=[camera_params],
+            output='screen'),
 
         Node(
             package='turtlebot3_node',

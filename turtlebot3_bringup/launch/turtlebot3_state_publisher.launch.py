@@ -20,15 +20,16 @@ import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import  Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, FindPackageShare
-from launch_ros.actions import Node
+from launch.substitutions import  Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    prefix = LaunchConfiguration("prefix", default_value='""')
+    prefix = LaunchConfiguration("prefix", default="")
     urdf_file_name = 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf.xacro'
 
     print("urdf_file_name : {}".format(urdf_file_name))
