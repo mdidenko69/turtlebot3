@@ -41,7 +41,6 @@ def generate_launch_description():
             get_package_share_directory('turtlebot3_bringup'),
             'param',
             'v4l2_camera.yaml'))
-    print("camera_params: {}".format(camera_params))
 
     tb3_param_dir = LaunchConfiguration(
         'tb3_param_dir',
@@ -66,6 +65,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     use_camera = LaunchConfiguration('use_camera', default='true')
+    use_joystick = LaunchConfiguration('use_joystick', default='true')
    
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -77,6 +77,11 @@ def generate_launch_description():
             'use_camera',
             default_value=use_camera,
             description='Use camera if true'),
+
+        DeclareLaunchArgument(
+            'use_joystick',
+            default_value=use_joystick,
+            description='Use joystick if true'),
 
         DeclareLaunchArgument(
             'usb_port',
@@ -92,6 +97,13 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 [ThisLaunchFileDir(), '/turtlebot3_state_publisher.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
+        ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [ThisLaunchFileDir(), '/joystick.launch.py']),
+            launch_arguments={'use_sim_time': use_sim_time}.items(),
+            condition=IfCondition(use_joystick),
         ),
 
         IncludeLaunchDescription(
